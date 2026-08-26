@@ -32,22 +32,20 @@ jobs:
 
   deploy:
     name: CD - Deploy
-    needs: build-and-push         
-    runs-on: [self-hosted, runner-isi]   
+    needs: build-and-push
+    runs-on: [self-hosted, runner-isi]
 
     steps:
       - name: Pull de la dernière image depuis Docker Hub
         run: docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
 
       - name: Stopper le conteneur existant (si présent)
-        run: docker stop ${{ env.IMAGE_NAME }} || true
+        run: docker stop ${{ env.IMAGE_NAME }}
+        continue-on-error: true
 
       - name: Supprimer l'ancien conteneur
-        run: docker rm ${{ env.IMAGE_NAME }} || true
+        run: docker rm ${{ env.IMAGE_NAME }}
+        continue-on-error: true
 
       - name: Lancer le nouveau conteneur sur le port 80
-        run: docker run -d \
-            --name ${{ env.IMAGE_NAME }} \
-            -p 80:80 \
-            --restart unless-stopped \
-            ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+        run: docker run -d --name ${{ env.IMAGE_NAME }} -p 80:80 --restart unless-stopped ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
